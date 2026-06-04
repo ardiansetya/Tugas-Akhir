@@ -6,12 +6,127 @@ import axios from 'axios';
 
 const BACKGROUND_LOCATION_TASK = 'background-location-task';
 const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080';
 
 interface PositionPayload {
   latitude: number;
   longitude: number;
   recorded_at: number;
+}
+
+/**
+ * Attempt to refresh the access token using the refresh token.
+ * Returns the new access token, or null if refresh fails.
+ */
+async function refreshTokenInBackground(): Promise<string | null> {
+  try {
+    const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+    if (!refreshToken) {
+      console.warn('⚠️ Background: No refresh token available');
+      return null;
+    }
+
+    console.log('🔄 Background: Attempting token refresh...');
+
+    const response = await axios.post(`${BASE_URL}/auth/refresh-token`, {
+      refresh_token: refreshToken,
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const newAccessToken = response.data?.data?.access_token || null;
+    const newRefreshToken = response.data?.data?.refresh_token || refreshToken;
+
+    if (newAccessToken && typeof newAccessToken === 'string') {
+      await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, newAccessToken);
+      console.log('✅ Background: Access token refreshed successfully');
+    }
+
+    if (newRefreshToken && typeof newRefreshToken === 'string') {
+      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, newRefreshToken);
+    }
+
+    return newAccessToken;
+  } catch (error: any) {
+    console.error('❌ Background: Token refresh failed:', error?.response?.data || error.message);
+    return null;
+  }
+}
+
+/**
+ * Send position to backend with automatic token refresh on 401.
+ */
+async function sendPositionWithAuth(payload: PositionPayload): Promise<boolean> {
+  let accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+
+  if (!accessToken) {
+    console.warn('⚠️ Background: No access token, attempting refresh...');
+    accessToken = await refreshTokenInBackground();
+    if (!accessToken) return false;
+  }
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/api/delivery/position`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      console.log('✅ Background: Position sent successfully at', new Date().toISOString());
+      return true;
+    }
+    return false;
+  } catch (error: any) {
+    // If 401, try refresh token then retry once
+    if (error?.response?.status === 401) {
+      console.warn('⚠️ Background: 401 received, refreshing token...');
+      const newToken = await refreshTokenInBackground();
+
+      if (newToken) {
+        try {
+          const retryResponse = await axios.post(
+            `${BASE_URL}/api/delivery/position`,
+            payload,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${newToken}`,
+              },
+            }
+          );
+
+          if (retryResponse.status === 200) {
+            console.log('✅ Background: Position sent after token refresh');
+            return true;
+          }
+        } catch (retryError: any) {
+          console.error('❌ Background: Retry after refresh failed:', retryError?.response?.data || retryError.message);
+
+          // If still 401 after refresh, token is truly invalid — stop tracking
+          if (retryError?.response?.status === 401) {
+            console.warn('⚠️ Background: Still unauthorized after refresh, stopping tracking');
+            await BackgroundLocationService.stop();
+          }
+          return false;
+        }
+      } else {
+        // Refresh failed — stop tracking
+        console.warn('⚠️ Background: Token refresh failed, stopping tracking');
+        await BackgroundLocationService.stop();
+        return false;
+      }
+    }
+
+    console.error('❌ Background: Failed to send position:', error?.response?.data || error.message);
+    return false;
+  }
 }
 
 // Task yang akan berjalan di background
@@ -24,56 +139,22 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
   if (data) {
     const { locations } = data as { locations: Location.LocationObject[] };
 
-    // Get access token for authentication
-    const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
-
-    if (!accessToken) {
-      console.warn('⚠️ Background: No access token found, skipping send');
-      return;
-    }
-
     // Process setiap lokasi yang diterima
     for (const location of locations) {
-      try {
-        // Check if location is mocked (fake GPS)
-        if (location.mocked) {
-          console.log('🚫 Background: Fake GPS detected, skipping send');
-          continue;
-        }
-
-        const payload: PositionPayload = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          recorded_at: Math.floor(location.timestamp / 1000), // Convert to Unix timestamp
-        };
-
-        console.log('📤 Background: Sending position:', payload);
-
-        // Kirim ke backend dengan auth token
-        const response = await axios.post(
-          `${BASE_URL}/api/delivery/position`,
-          payload,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${accessToken}`,
-            },
-          }
-        );
-
-        if (response.status === 200) {
-          console.log('✅ Background: Position sent successfully at', new Date().toISOString());
-        }
-      } catch (error: any) {
-        console.error('❌ Background: Failed to send position:', error?.response?.data || error.message);
-
-        // Jika 401 (unauthorized), stop tracking
-        if (error?.response?.status === 401) {
-          console.warn('⚠️ Background: Unauthorized, stopping tracking');
-          await BackgroundLocationService.stop();
-        }
-        // Jangan throw error agar task tetap berjalan untuk error lainnya
+      // Check if location is mocked (fake GPS)
+      if (location.mocked) {
+        console.log('🚫 Background: Fake GPS detected, skipping send');
+        continue;
       }
+
+      const payload: PositionPayload = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        recorded_at: Math.floor(location.timestamp / 1000), // Convert to Unix timestamp
+      };
+
+      console.log('📤 Background: Sending position:', payload);
+      await sendPositionWithAuth(payload);
     }
   }
 });
@@ -181,14 +262,7 @@ export class BackgroundLocationService {
     try {
       console.log('📤 Background: Sending instant single update...');
 
-      // 1. Get access token
-      const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
-      if (!accessToken) {
-        console.warn('⚠️ Background: No token, skipping single update');
-        return false;
-      }
-
-      // 2. Get current location (high accuracy)
+      // Get current location (high accuracy)
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -199,23 +273,7 @@ export class BackgroundLocationService {
         recorded_at: Math.floor(location.timestamp / 1000),
       };
 
-      // 3. Send to server
-      const response = await axios.post(
-        `${BASE_URL}/api/delivery/position`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        console.log('✅ Background: Instant position sent successfully');
-        return true;
-      }
-      return false;
+      return await sendPositionWithAuth(payload);
     } catch (error: any) {
       console.error('❌ Background: Failed to send instant update:', error.message);
       return false;
