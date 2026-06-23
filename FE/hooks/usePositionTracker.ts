@@ -64,7 +64,6 @@ export const usePositionTracker = (
   const [hasBackgroundPermission, setHasBackgroundPermission] = useState(false);
   const [lastSentAt, setLastSentAt] = useState<Date | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
-  const isInitialized = useRef(false);
   const locationRef = useRef<LocationData | null>(null); // Keep location in ref for immediate access
 
   const {
@@ -227,6 +226,15 @@ export const usePositionTracker = (
     }
   }, [isTracking, stopWatchingLocation]);
 
+  // Restart interval when interval value changes
+  useEffect(() => {
+    if (isTracking && intervalRef.current) {
+      console.log("🔄 Interval changed, restarting tracker interval to:", interval, "ms");
+      clearInterval(intervalRef.current as number);
+      intervalRef.current = setInterval(intervalSendPosition, interval);
+    }
+  }, [interval, isTracking, intervalSendPosition]);
+
   // Start background tracking
   const startBackgroundTracking = useCallback(async (): Promise<boolean> => {
     console.log("🚀 Starting background location tracking...");
@@ -310,32 +318,54 @@ export const usePositionTracker = (
     checkBackgroundStatus();
   }, []);
 
+  const startTrackingRef = useRef(startTracking);
+  const stopTrackingRef = useRef(stopTracking);
+  const startBackgroundTrackingRef = useRef(startBackgroundTracking);
+  const stopBackgroundTrackingRef = useRef(stopBackgroundTracking);
+
+  useEffect(() => {
+    startTrackingRef.current = startTracking;
+    stopTrackingRef.current = stopTracking;
+    startBackgroundTrackingRef.current = startBackgroundTracking;
+    stopBackgroundTrackingRef.current = stopBackgroundTracking;
+  });
+
   // Auto-start tracking
   useEffect(() => {
-    if (autoTrack && !isInitialized.current) {
-      console.log("🚀 Auto-starting position tracking...");
-      isInitialized.current = true;
+    let timerId: NodeJS.Timeout | null = null;
 
-      setTimeout(async () => {
+    if (autoTrack) {
+      console.log("🚀 Auto-starting position tracking...");
+      timerId = setTimeout(async () => {
         if (useBackgroundTracking) {
           console.log("📱 Using background tracking mode");
-          await startBackgroundTracking();
+          await startBackgroundTrackingRef.current();
         } else {
           console.log("📱 Using foreground tracking mode");
-          startTracking();
+          await startTrackingRef.current();
         }
       }, 1000);
+    } else {
+      console.log("🛑 Stopping position tracking (autoTrack is false)...");
+      if (useBackgroundTracking) {
+        stopBackgroundTrackingRef.current();
+      } else {
+        stopTrackingRef.current();
+      }
     }
 
     return () => {
       console.log("🧹 Cleanup: stopping tracking");
+      if (timerId) {
+        clearTimeout(timerId);
+      }
       if (useBackgroundTracking) {
-        stopBackgroundTracking();
+        stopBackgroundTrackingRef.current();
       } else {
-        stopTracking();
+        stopTrackingRef.current();
       }
     };
-  }, []);
+  }, [autoTrack, useBackgroundTracking]);
 
   useEffect(() => {
     return () => {

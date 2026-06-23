@@ -88,7 +88,7 @@ export default function TruckSearchFilter({
                 )}
                 onClick={() => setSelectedCargoType(type)}
               >
-                {type === "all" ? "SEMUA JENIS" : type}
+                {type === "all" ? "Semua Jenis" : type}
               </Button>
             ))}
           </div>

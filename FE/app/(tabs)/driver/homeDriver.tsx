@@ -14,7 +14,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Switch,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useDeliveryByWorker } from "@/hooks/useDelivery";
 import { useProfile } from "@/hooks/useProfile";
@@ -25,8 +27,37 @@ const DashboardDriver = () => {
   const { data: user } = useProfile();
   const worker_id = user?.data.id || "";
   const [nextUpdateCountdown, setNextUpdateCountdown] = useState<string>("");
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  const [isDemoLoaded, setIsDemoLoaded] = useState<boolean>(false);
 
+  // Load demo mode state on mount
+  useEffect(() => {
+    const loadDemoMode = async () => {
+      try {
+        const val = await AsyncStorage.getItem("demo_mode");
+        if (val !== null) {
+          setIsDemoMode(val === "true");
+        }
+      } catch (e) {
+        console.error("Failed to load demo mode:", e);
+      } finally {
+        setIsDemoLoaded(true);
+      }
+    };
+    loadDemoMode();
+  }, []);
 
+  const toggleDemoMode = async (value: boolean) => {
+    setIsDemoMode(value);
+    try {
+      await AsyncStorage.setItem("demo_mode", value ? "true" : "false");
+      console.log("Demo mode toggled:", value);
+    } catch (e) {
+      console.error("Failed to save demo mode:", e);
+    }
+  };
+
+  const currentInterval = isDemoMode ? 10000 : 900000; // 10 seconds vs 15 minutes
 
   const {
     data: deliveriesData,
@@ -36,7 +67,7 @@ const DashboardDriver = () => {
     isRefetching,
   } = useDeliveryByWorker(worker_id);
 
-  // Position tracking with automatic start and 15-minute intervals
+  // Position tracking with automatic start and dynamic interval
   const {
     isTracking,
     location,
@@ -47,8 +78,8 @@ const DashboardDriver = () => {
     lastSentAt,
     isMocked,
   } = usePositionTracker({
-    autoTrack: true, // Auto-start when component mounts
-    interval: 900000,
+    autoTrack: !!deliveriesData?.data, // Auto-start only when there is an active delivery
+    interval: currentInterval,
   });
 
   const router = useRouter();
@@ -63,16 +94,19 @@ const DashboardDriver = () => {
     const updateCountdown = () => {
       const now = Date.now();
       const lastSent = lastSentAt.getTime();
-      const nextUpdate = lastSent + 900000; // 15 minutes
+      const nextUpdate = lastSent + currentInterval;
       const timeLeft = nextUpdate - now;
 
       if (timeLeft <= 0) {
         setNextUpdateCountdown("Sending soon...");
-
       } else {
         const minutes = Math.floor(timeLeft / 60000);
         const seconds = Math.floor((timeLeft % 60000) / 1000);
-        setNextUpdateCountdown(`${minutes}m ${seconds}s`);
+        if (isDemoMode) {
+          setNextUpdateCountdown(`${seconds}s`);
+        } else {
+          setNextUpdateCountdown(`${minutes}m ${seconds}s`);
+        }
       }
     };
 
@@ -80,7 +114,7 @@ const DashboardDriver = () => {
     const countdownInterval = setInterval(updateCountdown, 1000);
 
     return () => clearInterval(countdownInterval);
-  }, [isTracking, lastSentAt]);
+  }, [isTracking, lastSentAt, currentInterval, isDemoMode]);
 
   // Handle location errors with automatic retry
   useEffect(() => {
@@ -293,6 +327,28 @@ const DashboardDriver = () => {
                   </Text>
                 </View>
               )}
+
+              {/* Divider */}
+              <View className="h-[1px] bg-gray-150 my-2" />
+
+              {/* Demo Mode Toggle */}
+              <View className="flex-row items-center justify-between mt-1">
+                <View className="flex-row items-center">
+                  <Ionicons name="flask" size={16} color={isDemoMode ? "#E11D48" : "#6B7280"} />
+                  <Text className="text-xs font-semibold text-gray-700 ml-2">
+                    Mode Demo (Kirim Tiap 10 Detik)
+                  </Text>
+                </View>
+                {isDemoLoaded && (
+                  <Switch
+                    value={isDemoMode}
+                    onValueChange={toggleDemoMode}
+                    trackColor={{ false: "#D1D5DB", true: "#FECDD3" }}
+                    thumbColor={isDemoMode ? "#E11D48" : "#F9FAFB"}
+                    style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                  />
+                )}
+              </View>
             </View>
           </View>
         </View>

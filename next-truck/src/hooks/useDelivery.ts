@@ -251,3 +251,18 @@ export const useTakeoverLogs = (deliveryId: string, enabled: boolean = true) => 
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 };
+
+// Get all recent alerts
+export const useRecentAlerts = () => {
+  return useQuery({
+    queryKey: ["recentAlerts"],
+    queryFn: async () => {
+      const response = await axiosInstance.get<ApiResponse<DeliveryAlertData[]>>(
+        "/api/delivery/alert"
+      );
+      return response.data.data;
+    },
+    staleTime: 30 * 1000, // 30 seconds
+  });
+};
+

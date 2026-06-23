@@ -6,22 +6,16 @@ import { Separator } from "@/components/ui/separator";
 import { useDelivery, useRoute, useTruck, useUser } from "@/hooks";
 import { TransitData } from "@/types/api";
 import {
-  CheckCircle2,
   Clock,
-  Mail,
   MapPin,
-  Navigation,
-  Package,
-  Phone,
   Activity,
-  User,
   XCircle,
   Terminal,
   ShieldCheck,
   AlertTriangle
 } from "lucide-react";
 import { TechCard } from "@/components/shared/TechCard";
-import { cn } from "@/lib/utils";
+import { cn, formatDurationHours } from "@/lib/utils";
 
 interface TransitDriverCardProps {
   transit: TransitData;
@@ -105,7 +99,7 @@ export default function TransitDriverCard({
                   </div>
                   <div className="flex items-center justify-between">
                      <span className="text-[10px] font-mono text-muted-foreground uppercase">Jarak & Estimasi</span>
-                     <span className="text-xs font-medium">{route.distance_km}km | {route.estimated_duration_hours}j</span>
+                     <span className="text-xs font-medium">{route.distance_km} km | {formatDurationHours(route.estimated_duration_hours)}</span>
                   </div>
                </div>
              )}

@@ -87,9 +87,9 @@ export default function RouteFilters({
             </div>
             <div className="flex p-1 bg-background/50 rounded-lg border border-border/30">
               {[
-                { id: "all", label: "SEMUA DATA" },
+                { id: "all", label: "Semua" },
                 { id: "active", label: "Aktif" },
-                { id: "inactive", label: "Luring" },
+                { id: "inactive", label: "Tidak Aktif" },
               ].map((s) => (
                 <button
                   key={s.id}
@@ -126,7 +126,7 @@ export default function RouteFilters({
                   )}
                   onClick={() => setSelectedCargoType(type)}
                 >
-                  {type === "all" ? "UMUM" : type}
+                  {type === "all" ? "Semua" : type}
                 </Button>
               ))}
             </div>

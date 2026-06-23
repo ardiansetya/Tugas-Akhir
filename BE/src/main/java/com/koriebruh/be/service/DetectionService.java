@@ -40,7 +40,7 @@ public class DetectionService {
 
     /**
      * Scheduled task to automatically detect and create alerts for:
-     * 1. GPS_LOST - No GPS update in the last 10 minutes
+     * 1. GPS_LOST - No GPS update in the last 15 minutes
      * 2. ILLEGAL_STOP - Vehicle stationary for 45+ minutes
      * 
      * Runs every 5 minutes.
@@ -55,14 +55,14 @@ public class DetectionService {
         for (Delivery delivery : activeDeliveries) {
             Position latest = positionRepo.findTopByDeliveryIdOrderByRecordedAtDesc(delivery.getId());
 
-            // 1. GPS LOST CHECK - No GPS update in 10 minutes
-            if (latest == null || latest.getRecordedAt() < now - 600) {
+            // 1. GPS LOST CHECK - No GPS update in 15 minutes
+            if (latest == null || latest.getRecordedAt() < now - 900) {
                 DeliverAlert recent = deliverAlertRepo.findTopByDeliveryIdAndTypeOrderByCreatedAtDesc(delivery.getId(), DeliverAlertType.GPS_LOST);
-                if (recent == null || recent.getCreatedAt() < now - 600) {
+                if (recent == null || recent.getCreatedAt() < now - 900) {
                     DeliverAlert alert = new DeliverAlert();
                     alert.setDelivery(delivery);
                     alert.setType(DeliverAlertType.GPS_LOST);
-                    alert.setMessage("No GPS update in the last 10 minutes. Possible issue like puncture or busy traffic.");
+                    alert.setMessage("No GPS update in the last 15 minutes. Possible issue like puncture or busy traffic.");
                     alert.setCreatedAt(now);
                     deliverAlertRepo.save(alert);
                 }

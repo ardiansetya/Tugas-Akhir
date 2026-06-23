@@ -1,6 +1,6 @@
 import { useRoute } from "@/hooks";
 import { Navigation, MapPin, Activity, Clock, Package, CreditCard } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { formatDurationHours } from "@/lib/utils";
 
 export function RouteInfo({ routeId }: { routeId: string }) {
   const { data: route, isLoading } = useRoute(routeId);
@@ -18,7 +18,7 @@ export function RouteInfo({ routeId }: { routeId: string }) {
   }
 
   if (!route)
-    return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">SIGNAL_LOST: {routeId}</span>;
+    return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Rute tidak ditemukan: {routeId}</span>;
 
   return (
     <div className="space-y-6">
@@ -32,17 +32,18 @@ export function RouteInfo({ routeId }: { routeId: string }) {
         </div>
         <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest">
            <MapPin className="h-3 w-3" />
-           Vector Topology Confirmation 
+           Jalur Rute Resmi
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: "Vector_Dist", value: `${route.distance_km} KM`, icon: Activity },
-          { label: "Temporal_Est", value: `${route.estimated_duration_hours}H`, icon: Clock },
-          { label: "Cargo_Class", value: route.cargo_type, icon: Package },
-          { label: "Base_Value", value: `Rp ${route.base_price.toLocaleString("id-ID")}`, icon: CreditCard },
+          { label: "Jarak Tempuh", value: `${route.distance_km} KM`, icon: Activity },
+          { label: "Estimasi Waktu", value: formatDurationHours(route.estimated_duration_hours), icon: Clock },
+          { label: "Tipe Kargo", value: route.cargo_type, icon: Package },
+          { label: "Harga Dasar", value: `Rp ${route.base_price.toLocaleString("id-ID")}`, icon: CreditCard },
         ].map((item, i) => (
+
           <div key={i} className="p-3 bg-secondary/10 rounded-xl border border-border/40 group hover:border-primary/30 transition-colors">
             <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest mb-1 group-hover:text-primary/60">
               <item.icon className="h-3 w-3" />
@@ -57,7 +58,7 @@ export function RouteInfo({ routeId }: { routeId: string }) {
         <div className="pt-4 border-t border-dashed border-border/50">
           <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
              <Activity className="h-3 w-3" />
-             Technical_Notes:
+             Catatan Rute:
           </p>
           <p className="text-xs text-muted-foreground/80 leading-relaxed font-medium bg-secondary/5 p-3 rounded-lg border border-border/20">
             {route.details}

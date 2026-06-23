@@ -116,6 +116,7 @@ export type DeliveryAlertData = {
   type: string;
   message: string;
   created_at: number;
+  delivery_id?: string;
 }
 
 export type DeliveryDetailData = DeliveryData & {

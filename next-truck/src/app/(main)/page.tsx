@@ -1,21 +1,197 @@
 "use client";
 
-import { useDeliveriesActive, useRoutes, useTransits, useTrucks } from "@/hooks";
+import {
+  useDeliveriesActive,
+  useRoutes,
+  useTransits,
+  useTrucks,
+  useHistoryDeliveries,
+  useRecentAlerts,
+  useTransitPoints,
+  useCities,
+} from "@/hooks";
 import { ClipboardCheck, Package, Route, Truck, Globe, ArrowUpRight, Activity, TrendingUp } from "lucide-react";
 import { BentoCard } from "@/components/shared/BentoCard";
 import { MotionWrapper } from "@/components/shared/MotionWrapper";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 export default function Home() {
   const { data: routes, isLoading: routesLoading } = useRoutes();
   const { data: trucks, isLoading: trucksLoading } = useTrucks();
   const { data: deliveries, isLoading: deliveriesLoading } = useDeliveriesActive();
   const { data: transits, isLoading: transitsLoading } = useTransits();
+  const { data: historyDeliveries } = useHistoryDeliveries();
+  const { data: alerts } = useRecentAlerts();
+  const { data: transitPoints } = useTransitPoints();
+  const { data: cities } = useCities();
 
   const totalRoutes = routes?.length || 0;
   const totalTrucksActive = trucks?.filter((t) => t.is_available)?.length || 0;
   const totalDeliveries = deliveries?.length || 0;
   const totalTransitsPending = transits?.filter((t) => t.is_accepted === null && !t.actioned_at)?.length || 0;
+
+  const formatTimeAgo = (timestampInSeconds: number) => {
+    const diff = Date.now() - timestampInSeconds * 1000;
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+
+    if (days > 0) return `${days} Hari lalu`;
+    if (hours > 0) return `${hours} Jam lalu`;
+    if (minutes > 0) return `${minutes} Menit lalu`;
+    return "Baru saja";
+  };
+
+  const activityLogs = useMemo(() => {
+    const logs: Array<{
+      id: string;
+      plateNumber: string;
+      status: string;
+      time: string;
+      timestamp: number;
+      type: "arrival" | "departure" | "auth" | "cargo" | "alert";
+    }> = [];
+
+    const getTruckPlate = (truckId?: string) => {
+      if (!truckId || !trucks) return "Truk";
+      const tr = trucks.find((t) => t.id === truckId);
+      return tr ? tr.license_plate : truckId;
+    };
+
+    const getRouteCities = (routeId?: string) => {
+      if (!routeId || !routes) return "";
+      const r = routes.find((route) => route.id === routeId);
+      return r ? ` (Rute ${r.start_city_name} → ${r.end_city_name})` : "";
+    };
+
+    const translateAlertType = (type: string) => {
+      switch (type) {
+        case "GPS_LOST": return "GPS Hilang";
+        case "ILLEGAL_STOP": return "Berhenti Ilegal";
+        case "TRAFFIC": return "Macet";
+        case "ACCIDENT": return "Kecelakaan";
+        case "BREAKDOWN": return "Mogok";
+        default: return type;
+      }
+    };
+
+    // 1. Active Deliveries (Started)
+    if (deliveries) {
+      deliveries.forEach((d) => {
+        logs.push({
+          id: d.id,
+          plateNumber: getTruckPlate(d.truck_id),
+          status: `Pengiriman dimulai${getRouteCities(d.route_id)}`,
+          timestamp: d.started_at,
+          type: "departure",
+          time: formatTimeAgo(d.started_at),
+        });
+      });
+    }
+
+    // 2. History Deliveries (Started & Finished)
+    if (historyDeliveries) {
+      historyDeliveries.forEach((d) => {
+        const plate = getTruckPlate(d.truck_id);
+        const routeText = getRouteCities(d.route_id);
+        if (d.finished_at) {
+          logs.push({
+            id: d.id,
+            plateNumber: plate,
+            status: `Pengiriman selesai${routeText}`,
+            timestamp: d.finished_at,
+            type: "arrival",
+            time: formatTimeAgo(d.finished_at),
+          });
+        }
+        logs.push({
+          id: d.id,
+          plateNumber: plate,
+          status: `Pengiriman dimulai${routeText}`,
+          timestamp: d.started_at,
+          type: "departure",
+          time: formatTimeAgo(d.started_at),
+        });
+      });
+    }
+
+    // 3. Transits
+    if (transits) {
+      transits.forEach((t) => {
+        const del = deliveries?.find((d) => d.id === t.delivery_id) || historyDeliveries?.find((d) => d.id === t.delivery_id);
+        const plate = getTruckPlate(del?.truck_id);
+
+        let pathStr = `#${t.transit_point_id}`;
+        if (transitPoints && cities) {
+          const tp = transitPoints.find((point) => point.id === t.transit_point_id);
+          if (tp) {
+            const loadingCity = cities.find((c) => c.id === tp.loading_city_id);
+            const unloadingCity = cities.find((c) => c.id === tp.unloading_city_id);
+            if (loadingCity && unloadingCity) {
+              pathStr = `${loadingCity.name} → ${unloadingCity.name}`;
+            }
+          }
+        }
+
+        if (t.arrived_at) {
+          logs.push({
+            id: t.delivery_id,
+            plateNumber: plate,
+            status: `Driver mengajukan Transit (${pathStr})${t.is_accepted === null && !t.actioned_at ? " [Perlu Tindakan]" : ""}`,
+            timestamp: t.arrived_at,
+            type: "cargo",
+            time: formatTimeAgo(t.arrived_at),
+          });
+        }
+
+        if (t.actioned_at && t.is_accepted !== null) {
+          logs.push({
+            id: t.delivery_id,
+            plateNumber: plate,
+            status: `Persetujuan Transit (${pathStr}): ${t.is_accepted ? "Disetujui" : "Ditolak"}${t.reason ? ` (${t.reason})` : ""}`,
+            timestamp: t.actioned_at,
+            type: t.is_accepted ? "auth" : "alert",
+            time: formatTimeAgo(t.actioned_at),
+          });
+        }
+      });
+    }
+
+    // 4. Alerts
+    if (alerts) {
+      alerts.forEach((a) => {
+        const del = deliveries?.find((d) => d.id === a.delivery_id) || historyDeliveries?.find((d) => d.id === a.delivery_id);
+        const plate = getTruckPlate(del?.truck_id);
+        const firstLine = a.message ? a.message.split("\n")[0] : "";
+
+        logs.push({
+          id: a.delivery_id || "ALERT",
+          plateNumber: plate,
+          status: `Peringatan: ${translateAlertType(a.type)} - ${firstLine}`,
+          timestamp: a.created_at,
+          type: "alert",
+          time: formatTimeAgo(a.created_at),
+        });
+      });
+    }
+
+    // Sort by timestamp descending
+    logs.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Deduplicate identical events on same delivery at same second
+    const uniqueLogs: typeof logs = [];
+    const seen = new Set<string>();
+    for (const log of logs) {
+      const key = `${log.id}-${log.status}-${log.timestamp}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueLogs.push(log);
+      }
+    }
+
+    return uniqueLogs.slice(0, 5);
+  }, [deliveries, historyDeliveries, transits, transitPoints, cities, alerts, trucks, routes]);
 
   return (
     <div className="container mx-auto p-6 md:p-10 lg:p-12 space-y-10">
@@ -102,32 +278,36 @@ export default function Home() {
           delay={0.5}
         >
           <div className="mt-6 space-y-6">
-            {[
-              { id: "TX-4229", status: "Sampai di Pos A", time: "2 mnt lalu", type: "arrival" },
-              { id: "TX-8812", status: "Berangkat ke Rute X", time: "12 mnt lalu", type: "departure" },
-              { id: "TX-9031", status: "Sudah Disetujui", time: "45 mnt lalu", type: "auth" },
-              { id: "TX-1102", status: "Barang Dimuat", time: "1 jam lalu", type: "cargo" },
-              { id: "TX-5521", status: "Rute Dialihkan", time: "2 jam lalu", type: "alert" },
-            ].map((log, i) => (
-              <div key={i} className="flex items-start gap-4 group cursor-default">
-                <div className="relative pt-1 flex flex-col items-center">
-                   <div className={cn(
-                     "h-2 w-2 rounded-full ring-4 ring-background z-10",
-                     i === 0 ? "bg-primary animate-pulse" : "bg-muted-foreground/30"
-                   )} />
-                   {i !== 4 && <div className="w-[1px] h-12 bg-border mt-1" />}
-                </div>
-                <div className="flex-1 pb-4">
-                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-foreground/80">{log.id}</span>
-                    <span className="text-[10px] font-medium text-muted-foreground">{log.time}</span>
-                  </div>
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors cursor-pointer">
-                    {log.status}
-                  </p>
-                </div>
+            {activityLogs.length === 0 ? (
+              <div className="text-center py-8 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+                Tidak Ada Aktivitas Baru
               </div>
-            ))}
+            ) : (
+              activityLogs.map((log, i) => (
+                <div key={i} className="flex items-start gap-4 group cursor-default">
+                  <div className="relative pt-1 flex flex-col items-center">
+                     <div className={cn(
+                       "h-2 w-2 rounded-full ring-4 ring-background z-10",
+                       log.type === "alert" ? "bg-destructive animate-pulse" :
+                       i === 0 ? "bg-primary animate-pulse" : "bg-muted-foreground/30"
+                     )} />
+                     {i !== activityLogs.length - 1 && <div className="w-[1px] h-12 bg-border mt-1" />}
+                  </div>
+                  <div className="flex-1 pb-4">
+                     <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-foreground/80">{log.plateNumber}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground">{log.time}</span>
+                    </div>
+                    <p className={cn(
+                      "text-sm font-medium transition-colors cursor-pointer",
+                      log.type === "alert" ? "text-destructive font-semibold" : "text-muted-foreground group-hover:text-primary"
+                    )}>
+                      {log.status}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
             <button className="w-full py-3 rounded-2xl bg-secondary/50 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-secondary hover:text-foreground transition-all">
               Lihat Selengkapnya
             </button>
@@ -178,7 +358,7 @@ export default function Home() {
 
         {/* Quick Action Section */}
         <BentoCard
-          className="bg-primary text-primary-foreground lg:col-span-1"
+          className="bg-primary text-primary-foreground hover:bg-primary lg:col-span-1"
           delay={0.7}
         >
           <div className="flex flex-col h-full justify-between">

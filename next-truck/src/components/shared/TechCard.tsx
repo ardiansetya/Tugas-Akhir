@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
 
 interface TechCardProps {
   title?: string;
@@ -52,11 +51,7 @@ export const TechCard = ({
         {/* Subtle decorative glow */}
         <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/5 blur-3xl transition-all group-hover:bg-primary/10" />
       </Card>
-      
-      {/* Precision indicator */}
-      <div className="absolute top-2 right-4 text-[8px] font-bold text-muted-foreground/20 uppercase tracking-[0.2em] pointer-events-none group-hover:text-primary/20 transition-colors">
-        Verified_Node
-      </div>
     </div>
   );
 };
+

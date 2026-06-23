@@ -50,9 +50,9 @@ export default function TransitPointListPage() {
   const formatDuration = useCallback((minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    if (hours > 0 && mins > 0) return `${hours}j ${mins}m`;
-    if (hours > 0) return `${hours}j`;
-    return `${mins}m`;
+    if (hours > 0 && mins > 0) return `${hours} Jam ${mins} Menit`;
+    if (hours > 0) return `${hours} Jam`;
+    return `${mins} Menit`;
   }, []);
 
   const columns = useMemo(

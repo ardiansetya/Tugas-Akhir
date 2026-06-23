@@ -2,7 +2,8 @@
 
 import { useCity } from "@/hooks";
 import { DeliveryTransitData } from "@/types/api";
-import { ArrowRight, Package, Clock, CreditCard, MapPin } from "lucide-react";
+import { Package, Clock, CreditCard, MapPin } from "lucide-react";
+import { formatDurationMinutes } from "@/lib/utils";
 
 const TransitContent = ({ transit }: { transit: DeliveryTransitData }) => {
   const { data: loadingCity } = useCity(transit.transit_point.loading_city_id);
@@ -11,11 +12,12 @@ const TransitContent = ({ transit }: { transit: DeliveryTransitData }) => {
   );
 
   const metrics = [
-    { label: "Vector_Path", value: `${loadingCity?.name} → ${unloadingCity?.name}`, icon: MapPin },
-    { label: "Cargo_Class", value: transit.transit_point.cargo_type, icon: Package },
-    { label: "Dur_Est", value: `${transit.transit_point.estimated_duration_minute}M`, icon: Clock },
-    { label: "Extra_V_Cost", value: `Rp ${transit.transit_point.extra_cost.toLocaleString("id-ID")}`, icon: CreditCard },
+    { label: "Rute Transit", value: `${loadingCity?.name} → ${unloadingCity?.name}`, icon: MapPin },
+    { label: "Tipe Kargo", value: transit.transit_point.cargo_type, icon: Package },
+    { label: "Estimasi Durasi", value: formatDurationMinutes(transit.transit_point.estimated_duration_minute), icon: Clock },
+    { label: "Biaya Tambahan", value: `Rp ${transit.transit_point.extra_cost.toLocaleString("id-ID")}`, icon: CreditCard },
   ];
+
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">

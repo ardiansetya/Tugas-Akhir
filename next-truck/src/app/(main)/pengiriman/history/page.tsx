@@ -52,10 +52,22 @@ export default function HistoryPage() {
 
   const calculateDuration = (startedAt: number, finishedAt: number) => {
     const diff = finishedAt - startedAt;
+    if (diff <= 0) return "0 Menit";
     const hours = Math.floor(diff / 3600);
     const minutes = Math.floor((diff % 3600) / 60);
 
-    return `${hours}J ${minutes}M`;
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      if (remainingHours > 0 && minutes > 0) return `${days} Hari ${remainingHours} Jam ${minutes} Menit`;
+      if (remainingHours > 0) return `${days} Hari ${remainingHours} Jam`;
+      if (minutes > 0) return `${days} Hari ${minutes} Menit`;
+      return `${days} Hari`;
+    }
+
+    if (hours > 0 && minutes > 0) return `${hours} Jam ${minutes} Menit`;
+    if (hours > 0) return `${hours} Jam`;
+    return `${minutes} Menit`;
   };
 
   const filteredData = useMemo(() => {
@@ -171,9 +183,9 @@ export default function HistoryPage() {
                            </div>
                         </div>
 
-                        <div className="pt-2 flex items-center justify-between text-[11px] font-semibold text-muted-foreground/40">
-                           <span>Selesai: {formatDate(item.finished_at * 1000)}</span>
-                           <div className="flex items-center gap-1 text-primary scale-0 group-hover:scale-100 transition-all">
+                         <div className="pt-2 flex items-center justify-between text-[11px] font-semibold text-muted-foreground/40">
+                            <span>Selesai: {item.finished_at ? formatDate(item.finished_at * 1000) : "-"}</span>
+                            <div className="flex items-center gap-1 text-primary scale-0 group-hover:scale-100 transition-all">
                               <span className="text-[10px] font-bold uppercase tracking-widest">Detail</span>
                               <ArrowUpRight className="h-4 w-4" />
                            </div>

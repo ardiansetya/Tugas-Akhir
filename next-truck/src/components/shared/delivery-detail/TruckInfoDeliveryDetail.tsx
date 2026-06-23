@@ -18,7 +18,7 @@ export function TruckInfo({ truckId }: { truckId: string }) {
   }
 
   if (!truck)
-    return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">UNIT_UNDEFINED: {truckId}</span>;
+    return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Unit tidak ditemukan: {truckId}</span>;
 
   return (
     <div className="space-y-6">
@@ -35,12 +35,12 @@ export function TruckInfo({ truckId }: { truckId: string }) {
 
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: "Cargo_Payload", value: truck.cargo_type, icon: Package },
-          { label: "Weight_Cap", value: `${truck.capacity_kg} KG`, icon: Weight },
-          { label: "Registry_ID", value: truck.id.substring(0, 12), icon: Database, isMono: true },
+          { label: "Muatan Kargo", value: truck.cargo_type, icon: Package },
+          { label: "Kapasitas Berat", value: `${truck.capacity_kg} KG`, icon: Weight },
+          { label: "ID Registrasi", value: truck.id.substring(0, 12), icon: Database, isMono: true },
           { 
-            label: "Unit_Status", 
-            value: truck.is_available ? "READY" : "DEPLOYED", 
+            label: "Status Unit", 
+            value: truck.is_available ? "SIAP" : "DIGUNAKAN", 
             icon: Activity,
             isStatus: true
           },
@@ -60,8 +60,8 @@ export function TruckInfo({ truckId }: { truckId: string }) {
       </div>
       
       <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-between">
-         <span className="text-[10px] font-mono text-primary/60 uppercase tracking-[0.2em] font-bold">Diagnostics_Status</span>
-         <span className="text-[10px] font-mono text-primary font-bold">OPTIMAL_LINK</span>
+         <span className="text-[10px] font-mono text-primary/60 uppercase tracking-[0.2em] font-bold">Status Diagnosis</span>
+         <span className="text-[10px] font-mono text-primary font-bold">KONEKSI OPTIMAL</span>
       </div>
     </div>
   );

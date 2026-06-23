@@ -39,7 +39,7 @@ export default function TransitTable({
   error,
 }: TransitTableProps) {
   return (
-    <TechCard title="Relay Ledger" subtitle="TRANSIT_NODE_DATA_FLOW">
+    <TechCard title="Daftar Titik Transit" subtitle="ALIRAN DATA TITIK TRANSIT">
       <div className="space-y-4 pt-2">
         <div className="relative w-full overflow-auto rounded-xl border border-border/30 bg-background/30">
           <Table>
@@ -65,7 +65,7 @@ export default function TransitTable({
                   <TableCell colSpan={columns.length} className="h-32 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <div className="h-8 w-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground animate-pulse">Syncing Relay Nodes...</span>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground animate-pulse">Menyinkronkan Titik Transit...</span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -73,15 +73,15 @@ export default function TransitTable({
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-32 text-center text-destructive">
                     <div className="flex flex-col items-center justify-center py-12">
-                      <p className="text-sm font-display uppercase tracking-widest font-bold text-destructive">Signal Lost</p>
-                      <p className="text-[10px] font-mono mt-1 opacity-60">DATABASE_UPLINK_FAILURE</p>
+                      <p className="text-sm font-display uppercase tracking-widest font-bold text-destructive">Koneksi Terputus</p>
+                      <p className="text-[10px] font-mono mt-1 opacity-60">GAGAL MENGHUBUNGKAN KE DATABASE</p>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
-                    key={row.id}
+                     key={row.id}
                     className="hover:bg-primary/5 border-border/30 transition-colors group"
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -101,8 +101,8 @@ export default function TransitTable({
                       <div className="p-4 bg-secondary/30 rounded-full border border-border/50 mb-4">
                         <MapPin className="h-8 w-8 opacity-20" />
                       </div>
-                      <h3 className="text-sm font-display uppercase tracking-widest font-bold text-foreground">Topology Empty</h3>
-                      <p className="text-[10px] font-mono mt-1 opacity-60">NO_TRANSIT_NODES_FOUND_IN_CURRENT_VECTOR</p>
+                      <h3 className="text-sm font-display uppercase tracking-widest font-bold text-foreground">Transit Kosong</h3>
+                      <p className="text-[10px] font-mono mt-1 opacity-60">TIDAK ADA TITIK TRANSIT YANG DITEMUKAN</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -115,7 +115,7 @@ export default function TransitTable({
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2 border-t border-border/30">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Batch Size</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Jumlah per Halaman</span>
               <Select
                 value={`${table.getState().pagination.pageSize}`}
                 onValueChange={(value) => table.setPageSize(Number(value))}
@@ -134,13 +134,13 @@ export default function TransitTable({
             </div>
             <div className="hidden md:flex items-center gap-2 text-[10px] font-mono text-muted-foreground/40">
               <Activity className="h-3 w-3" />
-              DATALINK_STATUS: OPTIMAL
+              STATUS KONEKSI: OPTIMAL
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/70">
-              NODE {table.getState().pagination.pageIndex + 1} <span className="opacity-30">OF</span> {table.getPageCount()}
+              HALAMAN {table.getState().pagination.pageIndex + 1} DARI {table.getPageCount()}
             </div>
             <div className="flex items-center gap-2">
               <Button

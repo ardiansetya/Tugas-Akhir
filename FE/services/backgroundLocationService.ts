@@ -267,6 +267,12 @@ export class BackgroundLocationService {
         accuracy: Location.Accuracy.High,
       });
 
+      // Check if location is mocked (fake GPS)
+      if (location.mocked) {
+        console.log('🚫 Background: Instant update: Fake GPS detected, skipping send');
+        return false;
+      }
+
       const payload: PositionPayload = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,

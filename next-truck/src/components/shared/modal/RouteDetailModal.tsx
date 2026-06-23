@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
+import { formatDurationHours } from "@/lib/utils";
 
 interface RouteDetailModalProps {
   route: RouteData | null;
@@ -176,7 +177,7 @@ const RouteDetailModal = ({
                       Estimasi Waktu
                     </p>
                     <p className="text-xl font-bold">
-                      {route.estimated_duration_hours} Jam
+                      {formatDurationHours(route.estimated_duration_hours)}
                     </p>
                   </div>
                 </div>

@@ -33,30 +33,30 @@ function TakeoverLogItem({ log }: { log: TakeoverLogData }) {
           </span>
         </div>
         <div className="px-2 py-0.5 rounded-md border border-primary/20 bg-primary/5 text-[8px] font-mono font-bold uppercase tracking-tighter text-primary">
-          HANDOVER_PROTOCOL
+          Protokol Serah Terima
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-0.5">
-          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase">OUTGOING_UNIT</p>
+          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase">Sopir Keluar</p>
           <p className="text-xs font-bold truncate">{log.from_worker}</p>
         </div>
         <div className="space-y-0.5">
-          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase">INCOMING_UNIT</p>
+          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase">Sopir Masuk</p>
           <p className="text-xs font-bold truncate text-primary">{log.to_worker}</p>
         </div>
       </div>
 
       {log.reason && (
         <div className="p-2 bg-background/40 rounded-lg border border-border/30">
-          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase mb-1">RATIONAL_LOG:</p>
+          <p className="text-[9px] font-mono text-muted-foreground/60 uppercase mb-1">Alasan Penggantian:</p>
           <p className="text-[11px] leading-tight text-muted-foreground/80">{log.reason}</p>
         </div>
       )}
 
       <div className="flex items-center justify-between pt-1 text-[9px] font-mono text-muted-foreground/40 uppercase tracking-widest">
-        <span>AUTH_NODE: {operator?.username || log.action_by_operator}</span>
+        <span>Disetujui Oleh: {operator?.username || log.action_by_operator}</span>
         <Activity className="h-3 w-3 text-green-500/30" />
       </div>
     </div>
@@ -89,7 +89,7 @@ export function DriverInfo({
   }
 
   if (!driver)
-    return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">OPERATOR_ID_LOST: {driverId}</span>;
+    return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Sopir Tidak Ditemukan: {driverId}</span>;
 
   const hasTakeoverLogs = takeoverLogs && takeoverLogs.length > 0;
 
@@ -110,10 +110,10 @@ export function DriverInfo({
 
         <div className="grid grid-cols-2 gap-4">
           {[
-            { label: "Comm_Link", value: driver.email, icon: Mail, isTruncate: true },
-            { label: "Signal_Freq", value: driver.phone_number, icon: Phone },
-            { label: "Service_Age", value: `${driver.age} CYCLES`, icon: Calendar },
-            { label: "Registry_ID", value: driver.id.substring(0, 12), icon: Activity, isMono: true },
+            { label: "Email", value: driver.email, icon: Mail, isTruncate: true },
+            { label: "Nomor Telepon", value: driver.phone_number, icon: Phone },
+            { label: "Umur", value: `${driver.age} Tahun`, icon: Calendar },
+            { label: "ID Registrasi", value: driver.id.substring(0, 12), icon: Activity, isMono: true },
           ].map((item, i) => (
             <div key={i} className="p-3 bg-secondary/10 rounded-xl border border-border/40 group hover:border-primary/30 transition-colors">
               <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/60 uppercase tracking-widest mb-1 group-hover:text-primary/60">
@@ -136,10 +136,10 @@ export function DriverInfo({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-primary/80 uppercase tracking-widest">
               <History className="h-3.5 w-3.5" />
-              Deployment_Handover_Log
+              Riwayat Pergantian Driver
             </div>
             <div className="text-[10px] font-mono text-muted-foreground/40 font-bold">
-              ENTRIES: {takeoverLogs.length}
+              Jumlah: {takeoverLogs.length}
             </div>
           </div>
 

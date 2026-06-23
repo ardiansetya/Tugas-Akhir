@@ -45,10 +45,25 @@ export default function DeliveryDetailPage() {
   }, []);
 
   const calculateDuration = (start: number, end?: number): string => {
-    const diffMs = (end ?? Date.now()) - start;
+    const startMs = start * 1000;
+    const endMs = end ? end * 1000 : Date.now();
+    const diffMs = endMs - startMs;
+    if (diffMs <= 0) return "0 Menit";
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
-    return `${hours}J ${minutes}M`;
+    
+    if (hours >= 24) {
+      const days = Math.floor(hours / 24);
+      const remainingHours = hours % 24;
+      if (remainingHours > 0 && minutes > 0) return `${days} Hari ${remainingHours} Jam ${minutes} Menit`;
+      if (remainingHours > 0) return `${days} Hari ${remainingHours} Jam`;
+      if (minutes > 0) return `${days} Hari ${minutes} Menit`;
+      return `${days} Hari`;
+    }
+    
+    if (hours > 0 && minutes > 0) return `${hours} Jam ${minutes} Menit`;
+    if (hours > 0) return `${hours} Jam`;
+    return `${minutes} Menit`;
   };
 
   if (isLoading || !delivery) {

@@ -16,7 +16,7 @@ export function OperatorInfo({ operatorId }: { operatorId: string }) {
     );
   }
 
-  if (!operator) return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">AUTH_ID_LOST: {operatorId}</span>;
+  if (!operator) return <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Petugas tidak ditemukan: {operatorId}</span>;
 
   return (
     <div className="flex items-center gap-4 p-3 bg-secondary/10 rounded-xl border border-border/30 group hover:border-primary/20 transition-all">
@@ -24,7 +24,7 @@ export function OperatorInfo({ operatorId }: { operatorId: string }) {
          <UserCircle className="h-6 w-6 text-primary" />
       </div>
       <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="text-[10px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest">Deployment_Commander</p>
+        <p className="text-[10px] font-mono font-bold text-muted-foreground/60 uppercase tracking-widest">Petugas Pembuat</p>
         <p className="text-sm font-bold truncate uppercase tracking-tight">{operator.username}</p>
         <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground/40 lowercase truncate">
            <Mail className="h-3 w-3" />
@@ -34,7 +34,7 @@ export function OperatorInfo({ operatorId }: { operatorId: string }) {
       <div className="flex flex-col items-end gap-1 px-3 py-1 border-l border-border/30">
          <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-green-500 uppercase tracking-tighter">
             <Shield className="h-3 w-3" />
-            AUTHORIZED
+            DISETUJUI
          </div>
          <Activity className="h-3 w-3 text-green-500/20" />
       </div>

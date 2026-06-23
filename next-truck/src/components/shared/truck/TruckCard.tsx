@@ -35,7 +35,7 @@ export default function TruckCard({
   return (
     <TechCard
       title={truck.license_plate}
-      subtitle={`UNIT_ID: ${truck.id}`}
+      subtitle={`ID Unit: ${truck.id}`}
       icon={
         <div className={cn(
           "p-2 rounded-lg transition-colors",
@@ -58,11 +58,11 @@ export default function TruckCard({
               : "bg-red-500/10 text-red-500 border-red-500/20"
           )}>
             <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", truck.is_available ? "bg-green-500" : "bg-red-500")} />
-            {truck.is_available ? "Operational" : "Maintenance"}
+            {truck.is_available ? "Siap Pakai" : "Dalam Servis"}
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-mono text-muted-foreground/60">
             <Activity className="h-3 w-3" />
-            Signal: Stable
+            Sinyal: Stabil
           </div>
         </div>
 
@@ -70,7 +70,7 @@ export default function TruckCard({
           <div className="flex items-center justify-between group/item">
             <div className="flex items-center gap-2">
               <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Model Type</span>
+              <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Tipe Model</span>
             </div>
             <span className="text-sm font-medium">{truck.model}</span>
           </div>
@@ -78,7 +78,7 @@ export default function TruckCard({
           <div className="flex items-center justify-between group/item">
             <div className="flex items-center gap-2">
               <Package className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Cargo Class</span>
+              <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Tipe Kargo</span>
             </div>
             <span className="text-sm font-medium">{truck.cargo_type}</span>
           </div>
@@ -86,7 +86,7 @@ export default function TruckCard({
           <div className="flex items-center justify-between group/item">
             <div className="flex items-center gap-2">
               <Weight className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Max Payload</span>
+              <span className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">Kapasitas Muatan</span>
             </div>
             <span className="text-sm font-medium">{formatCapacity(truck.capacity_kg)}</span>
           </div>
@@ -102,7 +102,7 @@ export default function TruckCard({
                 onClick={() => onToggleAvailability(truck.id, false)}
               >
                 <XCircle className="h-3.5 w-3.5" />
-                Initialize Service
+                Mulai Servis
               </Button>
             ) : (
               <Button
@@ -112,7 +112,7 @@ export default function TruckCard({
                 onClick={() => mutate(truck.id)}
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Restore Status
+                Aktifkan Unit
               </Button>
             )}
           </div>

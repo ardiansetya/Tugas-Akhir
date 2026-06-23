@@ -127,13 +127,18 @@ const fetchActiveDeliveries = async (): Promise<DeliveryResponse> => {
 const fetchActiveDeliveriesWorker = async (
   worker_id: string
 ): Promise<DeliveryWorkerResponse> => {
-  const response = await api.get(`/api/delivery/active/${worker_id}`);
-
-  if (response.status !== 200) {
-    throw new Error("Failed to fetch active deliveries");
+  try {
+    const response = await api.get(`/api/delivery/active/${worker_id}`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return {
+        status: "OK",
+        data: null as any,
+      };
+    }
+    throw error;
   }
-
-  return response.data;
 };
 
 const fetchDeliveryDetail = async (delivery_id: string): Promise<DeliveryDetailResponse> => {
@@ -145,14 +150,20 @@ const fetchDeliveryDetail = async (delivery_id: string): Promise<DeliveryDetailR
 
   return response.data;
 };
+
 const fetchDeliveryByWorker = async (): Promise<DeliveryDetailResponse> => {
-  const response = await api.get("/api/delivery/detail");
-
-  if (response.status !== 200) {
-    throw new Error(`Failed to fetch delivery detail `);
+  try {
+    const response = await api.get("/api/delivery/detail");
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return {
+        status: "OK",
+        data: null as any,
+      };
+    }
+    throw error;
   }
-
-  return response.data;
 };
 
 const fetchWorker = async (worker_id: string): Promise<WorkerResponse> => {

@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
+import { formatDurationHours } from "@/lib/utils";
 
 export const createRouteTableColumns = (
   formatCurrency: (amount: number) => string,
@@ -107,7 +108,7 @@ export const createRouteTableColumns = (
     cell: ({ row }) => {
       return (
         <span className="text-sm font-medium">
-          {row.getValue("estimated_duration_hours")} Jam
+          {formatDurationHours(row.getValue("estimated_duration_hours"))}
         </span>
       );
     },

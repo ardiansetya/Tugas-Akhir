@@ -86,9 +86,9 @@ export default function TransitFilters({
             </div>
             <div className="flex p-1 bg-background/50 rounded-lg border border-border/30">
               {[
-                { id: "all", label: "SEMUA DATA" },
-                { id: "active", label: "Daring" },
-                { id: "inactive", label: "Luring" },
+                { id: "all", label: "Semua" },
+                { id: "active", label: "Aktif" },
+                { id: "inactive", label: "Tidak Aktif" },
               ].map((s) => (
                 <button
                   key={s.id}
