@@ -294,7 +294,7 @@ export default function TrackingMap({ positions, deliveryData }: TrackingMapProp
       `}</style>
       <div
         ref={mapContainerRef}
-        className="w-full h-[700px] overflow-hidden relative z-0"
+        className="w-full h-[820px] overflow-hidden relative z-0"
       />
     </>
   );

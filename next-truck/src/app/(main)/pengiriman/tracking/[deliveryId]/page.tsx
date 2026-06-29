@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const TrackingMap = dynamic(() => import("@/components/tracking/TrackingMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] bg-secondary/10 rounded-3xl flex items-center justify-center border-2 border-dashed">
+    <div className="w-full h-[820px] bg-secondary/10 rounded-3xl flex items-center justify-center border-2 border-dashed">
       <div className="text-center space-y-4">
         <div className="animate-spin rounded-full h-14 w-14 border-4 border-primary/20 border-t-primary mx-auto"></div>
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Menyiapkan Peta Lokasi...</p>
@@ -202,11 +202,11 @@ export default function TrackingPage() {
               icon={<Globe className="h-5 w-5" />}
             >
               {loading ? (
-                 <Skeleton className="w-full h-[650px] rounded-3xl" />
+                 <Skeleton className="w-full h-[820px] rounded-3xl" />
               ) : positions.length > 0 ? (
                  <TrackingMap positions={positions} deliveryData={deliveryData} />
               ) : (
-                 <div className="w-full h-[650px] flex flex-col items-center justify-center p-12 text-center bg-secondary/5">
+                 <div className="w-full h-[820px] flex flex-col items-center justify-center p-12 text-center bg-secondary/5">
                     <div className="p-6 bg-background rounded-3xl mb-4 border shadow-sm">
                        <MapPin className="h-14 w-14 opacity-20" />
                     </div>
