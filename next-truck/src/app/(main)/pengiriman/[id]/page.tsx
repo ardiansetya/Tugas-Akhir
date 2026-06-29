@@ -230,7 +230,7 @@ export default function DeliveryDetailPage() {
 
           {!isFinished ? (
             <MotionWrapper delay={0.5}>
-               <BentoCard className="bg-primary text-primary-foreground">
+               <BentoCard className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/20">
                   <div className="space-y-6">
                      <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
                         <Globe className="h-6 w-6" />
