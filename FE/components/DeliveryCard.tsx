@@ -31,7 +31,7 @@ const DeliveryCard: React.FC<DeliveryCardProps> = ({ delivery, onPress }) => {
 
   const getTimeDifference = (start_time: number) => {
     const now = Date.now();
-    const diff = now - start_time;
+    const diff = now - (start_time * 1000);
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
@@ -46,6 +46,16 @@ const DeliveryCard: React.FC<DeliveryCardProps> = ({ delivery, onPress }) => {
       return `${(distance_km / 1000).toFixed(1)}k km`;
     }
     return `${distance_km} km`;
+  };
+
+  const formatEstimatedDuration = (hoursDecimal: number) => {
+    const totalMinutes = Math.round(hoursDecimal * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) {
+      return minutes > 0 ? `${hours}j ${minutes}m` : `${hours}j`;
+    }
+    return `${minutes}m`;
   };
 
   const formatCapacity = (capacity_kg: number) => {
@@ -157,7 +167,7 @@ const DeliveryCard: React.FC<DeliveryCardProps> = ({ delivery, onPress }) => {
               {route?.distance_km && (
                 <Text className="text-xs text-gray-500">
                   {formatDistance(route.distance_km)} •{" "}
-                  {route.estimated_duration_hours}j estimasi
+                  {formatEstimatedDuration(route.estimated_duration_hours)} estimasi
                 </Text>
               )}
             </View>

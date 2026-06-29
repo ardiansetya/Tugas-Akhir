@@ -119,6 +119,16 @@ const DeliveryDetail = () => {
     }).format(amount);
   };
 
+  const formatEstimatedDuration = (hoursDecimal: number) => {
+    const totalMinutes = Math.round(hoursDecimal * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) {
+      return minutes > 0 ? `${hours} jam ${minutes} menit` : `${hours} jam`;
+    }
+    return `${minutes} menit`;
+  };
+
   const formatPositionTime = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleString("id-ID", {
       day: "2-digit",
@@ -347,8 +357,7 @@ const DeliveryDetail = () => {
               </Text>
               {route && (
                 <Text className="text-gray-600 text-sm mt-1">
-                  {route.distance_km} km • {route.estimated_duration_hours} jam
-                  estimasi
+                  {route.distance_km} km • {formatEstimatedDuration(route.estimated_duration_hours)} estimasi
                 </Text>
               )}
             </View>
