@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { useRecentAlerts, useTransits } from "@/hooks";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 // Synthesize premium notification sounds using Web Audio API
 const playNotificationSound = (type: "error" | "info") => {
@@ -120,7 +120,7 @@ export default function NotificationListener() {
             description: `Driver mengajukan izin transit untuk pengiriman #${t.delivery_id.slice(0, 8)}`,
             action: {
               label: "Buka Transit",
-              onClick: () => router.push("/daftar-transit"),
+              onClick: () => router.push("/transit-driver"),
             },
             duration: 8000,
           });
