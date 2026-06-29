@@ -11,7 +11,7 @@ import { DeliveryInfoSection } from "@/components/shared/delivery-detail/Deliver
 import { useDelivery, useRoute, useTrackingPositions, useTrucks } from "@/hooks";
 import { DeliveryDetailData, RouteData } from "@/types/api";
 import { MotionWrapper } from "@/components/shared/MotionWrapper";
-import { Activity, Globe, MonitorCheck, Download, Database } from "lucide-react";
+import { Activity, Globe, MonitorCheck, Download, Database, AlertTriangle } from "lucide-react";
 import { BentoCard } from "@/components/shared/BentoCard";
 import Link from "next/link";
 
@@ -200,6 +200,51 @@ export default function DeliveryDetailPage() {
                 formatDateTime={formatDateTime}
               />
           </MotionWrapper>
+
+          {delivery.alerts && delivery.alerts.length > 0 && (
+            <MotionWrapper delay={0.5}>
+              <BentoCard 
+                title="Daftar Kendala & Peringatan" 
+                subtitle="Laporan kendala yang dikirim oleh driver" 
+                icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
+              >
+                <div className="mt-4 space-y-4">
+                  {delivery.alerts.map((alert, index) => {
+                    const translateAlert = (type: string) => {
+                      const mapping: Record<string, string> = {
+                        accident: "Kecelakaan",
+                        breakdown: "Mogok",
+                        canceled: "Dibatalkan",
+                        unauthorized_unloading: "Bongkar Ilegal",
+                        illegal_stop: "Berhenti Ilegal",
+                        route_deviation: "Keluar Rute",
+                        fuel_issue: "Masalah BBM",
+                        gps_lost: "GPS Hilang",
+                        puncture: "Ban Bocor/Pecah",
+                      };
+                      return mapping[type.toLowerCase()] || type;
+                    };
+
+                    return (
+                      <div key={index} className="p-5 bg-destructive/5 rounded-3xl border border-destructive/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-destructive/10 text-destructive uppercase tracking-wider">
+                            {translateAlert(alert.type)}
+                          </span>
+                          <span className="text-xs text-muted-foreground font-semibold">
+                            {formatDateTime(alert.created_at * 1000)}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground/80 leading-relaxed whitespace-pre-line">
+                          {alert.message}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </BentoCard>
+            </MotionWrapper>
+          )}
         </div>
 
         {/* Sidebar Info */}

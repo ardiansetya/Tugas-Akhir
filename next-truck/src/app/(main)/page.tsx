@@ -80,12 +80,17 @@ export default function Home() {
     };
 
     const translateAlertType = (type: string) => {
-      switch (type) {
+      switch (type.toUpperCase()) {
         case "GPS_LOST": return "GPS Hilang";
         case "ILLEGAL_STOP": return "Berhenti Ilegal";
         case "TRAFFIC": return "Macet";
         case "ACCIDENT": return "Kecelakaan";
         case "BREAKDOWN": return "Mogok";
+        case "ROUTE_DEVIATION": return "Menyimpang Rute";
+        case "PUNCTURE": return "Ban Bocor/Pecah";
+        case "FUEL_ISSUE": return "Masalah BBM";
+        case "UNAUTHORIZED_UNLOADING": return "Bongkar Ilegal";
+        case "CANCELED": return "Dibatalkan";
         default: return type;
       }
     };

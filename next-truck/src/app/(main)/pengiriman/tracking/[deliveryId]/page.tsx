@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Clock, Navigation, RefreshCw, Database, Globe, Zap, Download } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Navigation, RefreshCw, Database, Globe, Zap, Download, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTrackingPositions, useDelivery, useTrucks } from "@/hooks";
 import { useQueryClient } from "@tanstack/react-query";
@@ -272,6 +272,53 @@ export default function TrackingPage() {
                    </div>
                  )}
                </div>
+            </BentoCard>
+          </MotionWrapper>
+
+          <MotionWrapper delay={0.3}>
+            <BentoCard title="Kendala Terlaporkan" subtitle="Laporan aktif dari driver" icon={<AlertTriangle className="h-5 w-5 text-destructive" />}>
+              <div className="mt-4 space-y-4">
+                {!deliveryData?.alerts || deliveryData.alerts.length === 0 ? (
+                  <div className="text-center py-6 border-2 border-dashed rounded-3xl bg-secondary/5 space-y-2">
+                    <p className="text-sm font-bold opacity-30">TIDAK ADA KENDALA</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-green-500 opacity-60">Status Lancar</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    {deliveryData.alerts.map((alert, index) => {
+                      const translateAlert = (type: string) => {
+                        const mapping: Record<string, string> = {
+                          accident: "Kecelakaan",
+                          breakdown: "Mogok",
+                          canceled: "Dibatalkan",
+                          unauthorized_unloading: "Bongkar Ilegal",
+                          illegal_stop: "Berhenti Ilegal",
+                          route_deviation: "Keluar Rute",
+                          fuel_issue: "Masalah BBM",
+                          gps_lost: "GPS Hilang",
+                          puncture: "Ban Bocor/Pecah",
+                        };
+                        return mapping[type.toLowerCase()] || type;
+                      };
+                      return (
+                        <div key={index} className="p-4 bg-destructive/5 rounded-2xl border border-destructive/10 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-destructive/10 text-destructive uppercase tracking-wide">
+                              {translateAlert(alert.type)}
+                            </span>
+                            <span className="text-[9px] text-muted-foreground font-medium">
+                              {formatDate(alert.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-xs font-medium text-foreground/80 leading-relaxed whitespace-pre-line">
+                            {alert.message}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </BentoCard>
           </MotionWrapper>
 
