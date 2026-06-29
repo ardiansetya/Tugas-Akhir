@@ -19,6 +19,7 @@ export const useTransits = () => {
       return response.data.data;
     },
     staleTime: 1 * 60 * 1000, // 1 minute
+    refetchInterval: 10000, // Poll every 10 seconds
   });
 };
 

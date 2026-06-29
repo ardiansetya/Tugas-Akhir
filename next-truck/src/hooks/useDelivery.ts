@@ -6,6 +6,7 @@ import {
   DeliveryDetailData,
   TakeoverDeliveryRequest,
   TakeoverLogData,
+  DeliveryAlertData,
 } from "@/types/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -263,6 +264,7 @@ export const useRecentAlerts = () => {
       return response.data.data;
     },
     staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 10000, // Poll every 10 seconds
   });
 };
 

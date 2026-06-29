@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Order(1)
 public class UserSeeder implements CommandLineRunner {
 
     @Autowired
@@ -36,7 +38,11 @@ public class UserSeeder implements CommandLineRunner {
                 createUser("ownerapp", "owner2024", "owner@company.com", RoleType.OWNER, "081234567001", 35L),
                 createUser("adminapp", "admin123", "admin@admin.com", RoleType.ADMIN, "081234567890", 21L),
                 createUser("moderatorbudi", "budi4567", "budi@moderator.com", RoleType.MODERATOR, "081234567002", 28L),
-                createUser("driverandi", "andi7890", "andi@driver.com", RoleType.DRIVER, "081234567003", 32L)
+                createUser("driverandi", "andi7890", "andi@driver.com", RoleType.DRIVER, "081234567003", 32L),
+                createUser("driverbudi", "budi1234", "budi@driver.com", RoleType.DRIVER, "081234567004", 29L),
+                createUser("driverchandra", "chandra5678", "chandra@driver.com", RoleType.DRIVER, "081234567005", 35L),
+                createUser("driverdewi", "dewi9012", "dewi@driver.com", RoleType.DRIVER, "081234567006", 27L),
+                createUser("drivereka", "eka3456", "eka@driver.com", RoleType.DRIVER, "081234567007", 31L)
         );
 
         for (User user : users) {

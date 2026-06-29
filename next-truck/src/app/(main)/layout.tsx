@@ -4,6 +4,7 @@ import TanstackProvider from "@/components/providers/TanstackProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import Navbar from "@/components/shared/Navbar";
 import { Toaster } from "@/components/ui/sonner";
+import NotificationListener from "@/components/shared/NotificationListener";
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 
@@ -44,6 +45,7 @@ export default function RootLayout({
                   {children}
                 </main>
               </div>
+              <NotificationListener />
               <Toaster position="top-right" richColors expand={false}/>
             </ThemeProvider>
           </TanstackProvider>

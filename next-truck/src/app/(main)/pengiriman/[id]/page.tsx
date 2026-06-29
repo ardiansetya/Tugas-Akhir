@@ -1,19 +1,19 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DeliveryHeader } from "@/components/shared/delivery-detail/DeliveryHeader";
 import { DeliveryStatusCards } from "@/components/shared/delivery-detail/DeliveryStatusCard";
 import { DeliveryTransitList } from "@/components/shared/delivery-detail/DeliveryTransitsList";
 import DeliveryPaymentCard from "@/components/shared/delivery-detail/DeliveryPaymentCard";
 import { DeliveryInfoSection } from "@/components/shared/delivery-detail/DeliveryInfoSection";
-import { useDelivery } from "@/hooks/useDelivery";
-import { useRoute } from "@/hooks/useRoute";
+import { useDelivery, useRoute, useTrackingPositions, useTrucks } from "@/hooks";
 import { DeliveryDetailData, RouteData } from "@/types/api";
 import { MotionWrapper } from "@/components/shared/MotionWrapper";
-import { Activity, Globe, MonitorCheck } from "lucide-react";
+import { Activity, Globe, MonitorCheck, Download, Database } from "lucide-react";
 import { BentoCard } from "@/components/shared/BentoCard";
+import Link from "next/link";
 
 export default function DeliveryDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +22,67 @@ export default function DeliveryDetailPage() {
 
   const { data: routeData } = useRoute(delivery?.route_id ?? "");
   const route = routeData as RouteData | undefined;
+
+  const { data: trackingData } = useTrackingPositions(id);
+  const { data: trucks } = useTrucks();
+
+  const truckPlate = useMemo(() => {
+    if (!delivery || !trucks) return "";
+    const tr = trucks.find((t) => t.id === delivery.truck_id);
+    return tr ? tr.license_plate : "";
+  }, [delivery, trucks]);
+
+  const deliveryDateStr = useMemo(() => {
+    if (!delivery?.started_at) return "";
+    const date = new Date(delivery.started_at * 1000);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }, [delivery?.started_at]);
+
+  const exportToCSV = () => {
+    const positions = Array.isArray(trackingData) ? trackingData : [];
+    if (positions.length === 0) return;
+
+    const headers = ["No", "Nama Lokasi", "Alamat Lengkap", "Kota", "Provinsi", "Negara", "Latitude", "Longitude", "Waktu Rekam"];
+    
+    const rows = positions.map((pos: any, index: number) => {
+      const waktu = new Date(pos.recorded_at * 1000).toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      return [
+        index + 1,
+        `"${(pos.name || "-").replace(/"/g, '""')}"`,
+        `"${(pos.formatted_address || "-").replace(/"/g, '""')}"`,
+        `"${pos.city || "-"}"`,
+        `"${pos.state || "-"}"`,
+        `"${pos.country || "-"}"`,
+        pos.latitude,
+        pos.longitude,
+        `"${waktu}"`,
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    
+    const cleanPlate = truckPlate ? truckPlate.replace(/\s+/g, "-") : "truk";
+    const cleanDate = deliveryDateStr || "tanggal";
+    link.download = `${cleanPlate}_${cleanDate}.csv`;
+
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   // ✅ Utility Formatters
   const formatDateTime = (timestamp: number): string =>
@@ -167,24 +228,53 @@ export default function DeliveryDetailPage() {
              </div>
           </BentoCard>
 
-          <MotionWrapper delay={0.5}>
-             <BentoCard className="bg-primary text-primary-foreground">
-                <div className="space-y-6">
-                   <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                      <Globe className="h-6 w-6" />
-                   </div>
-                   <div className="space-y-2">
-                      <h3 className="text-xl font-bold">Pelacakan GPS Aktif</h3>
-                      <p className="text-xs font-medium opacity-80 leading-relaxed">
-                         Lokasi driver dipantau langsung menggunakan GPS untuk menjamin keamanan dan ketepatan waktu pengiriman.
-                      </p>
-                   </div>
-                   <button className="w-full py-4 bg-white text-primary rounded-2xl text-xs font-bold hover:bg-white/90 transition-all">
-                      Buka Peta Lokasi
-                   </button>
-                </div>
-             </BentoCard>
-          </MotionWrapper>
+          {!isFinished ? (
+            <MotionWrapper delay={0.5}>
+               <BentoCard className="bg-primary text-primary-foreground">
+                  <div className="space-y-6">
+                     <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        <Globe className="h-6 w-6" />
+                     </div>
+                     <div className="space-y-2">
+                        <h3 className="text-xl font-bold">Pelacakan GPS Aktif</h3>
+                        <p className="text-xs font-medium opacity-80 leading-relaxed">
+                           Lokasi driver dipantau langsung menggunakan GPS untuk menjamin keamanan dan ketepatan waktu pengiriman.
+                        </p>
+                     </div>
+                     <Link href={`/pengiriman/tracking/${delivery.id}`} className="w-full block">
+                       <button className="w-full py-4 bg-white text-primary rounded-2xl text-xs font-bold hover:bg-white/90 transition-all">
+                          Buka Peta Lokasi
+                       </button>
+                     </Link>
+                  </div>
+               </BentoCard>
+            </MotionWrapper>
+          ) : (
+            <MotionWrapper delay={0.5}>
+               <BentoCard>
+                  <div className="space-y-6">
+                     <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <Database className="h-6 w-6" />
+                     </div>
+                     <div className="space-y-2">
+                        <h3 className="text-xl font-bold">Riwayat Perjalanan</h3>
+                        <p className="text-xs text-muted-foreground font-medium leading-relaxed">
+                           Pengiriman telah selesai. Anda dapat mengunduh riwayat koordinat perjalanan driver dalam format CSV.
+                        </p>
+                     </div>
+                     <div className="flex flex-col gap-3">
+                       <button 
+                         onClick={exportToCSV}
+                         disabled={!trackingData || trackingData.length === 0}
+                         className="w-full py-4 bg-primary text-primary-foreground rounded-2xl text-xs font-bold hover:bg-primary/95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                       >
+                          <Download className="h-4 w-4" /> Export CSV
+                       </button>
+                     </div>
+                  </div>
+               </BentoCard>
+            </MotionWrapper>
+          )}
         </div>
       </div>
       

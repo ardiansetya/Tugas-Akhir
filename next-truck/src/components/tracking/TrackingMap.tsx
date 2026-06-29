@@ -34,6 +34,7 @@ interface TrackingMapProps {
 export default function TrackingMap({ positions, deliveryData }: TrackingMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const routeControlRef = useRef<L.Control | null>(null);
 
   // Get route data for destination info
   const { data: routeData } = useRoute(deliveryData?.route_id || "", !!deliveryData?.route_id);
@@ -184,6 +185,12 @@ export default function TrackingMap({ positions, deliveryData }: TrackingMapProp
       map.setView(latLng, 13);
     }
 
+    // Remove old route control before adding new one
+    if (routeControlRef.current) {
+      map.removeControl(routeControlRef.current);
+      routeControlRef.current = null;
+    }
+
     // Add route info control if route data is available
     if (routeData) {
       const RouteInfoControl = L.Control.extend({
@@ -192,30 +199,30 @@ export default function TrackingMap({ positions, deliveryData }: TrackingMapProp
           div.innerHTML = `
             <div style="
               background: white;
-              padding: 12px 16px;
-              border-radius: 8px;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+              padding: 14px 18px;
+              border-radius: 12px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.15);
               font-family: system-ui, -apple-system, sans-serif;
-              min-width: 220px;
-              border: 2px solid #e5e7eb;
+              min-width: 230px;
+              border: 1px solid #e5e7eb;
             ">
-              <div style="font-weight: 700; font-size: 14px; color: #1f2937; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <div style="font-weight: 700; font-size: 14px; color: #1f2937; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 18px;">🗺️</span>
                 <span>Rute Pengiriman</span>
               </div>
-              <div style="background: #f0fdf4; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #10b981;">
+              <div style="background: #f0fdf4; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #10b981;">
                 <div style="font-size: 10px; color: #059669; font-weight: 600; margin-bottom: 2px;">🏁 TITIK AWAL</div>
-                <div style="font-size: 12px; color: #1f2937; font-weight: 600;">${routeData.start_city_name}</div>
+                <div style="font-size: 13px; color: #1f2937; font-weight: 600;">${routeData.start_city_name}</div>
               </div>
               <div style="text-align: center; color: #9ca3af; margin: 6px 0;">
                 <span style="font-size: 16px;">↓</span>
               </div>
-              <div style="background: #fef2f2; padding: 8px; border-radius: 6px; border-left: 3px solid #ef4444;">
+              <div style="background: #fef2f2; padding: 10px; border-radius: 8px; border-left: 3px solid #ef4444;">
                 <div style="font-size: 10px; color: #dc2626; font-weight: 600; margin-bottom: 2px;">🎯 TUJUAN AKHIR</div>
-                <div style="font-size: 12px; color: #1f2937; font-weight: 600;">${routeData.end_city_name}</div>
+                <div style="font-size: 13px; color: #1f2937; font-weight: 600;">${routeData.end_city_name}</div>
               </div>
-              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-                <div style="font-size: 10px; color: #6b7280; display: flex; justify-content: space-between;">
+              <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                <div style="font-size: 11px; color: #6b7280; display: flex; justify-content: space-between;">
                   <span>📏 ${routeData.distance_km} km</span>
                   <span>⏱️ ${routeData.estimated_duration_hours}h</span>
                 </div>
@@ -226,7 +233,9 @@ export default function TrackingMap({ positions, deliveryData }: TrackingMapProp
         }
       });
 
-      new RouteInfoControl({ position: 'topright' }).addTo(map);
+      const control = new RouteInfoControl({ position: 'topright' });
+      control.addTo(map);
+      routeControlRef.current = control;
     }
 
     // Cleanup function
@@ -285,7 +294,7 @@ export default function TrackingMap({ positions, deliveryData }: TrackingMapProp
       `}</style>
       <div
         ref={mapContainerRef}
-        className="w-full h-[600px] rounded-lg overflow-hidden border shadow-sm relative z-0"
+        className="w-full h-[700px] overflow-hidden relative z-0"
       />
     </>
   );

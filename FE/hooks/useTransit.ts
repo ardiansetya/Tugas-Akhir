@@ -201,9 +201,9 @@ export const useTransitPointDriver = (worker_id: string) => {
     select: (data) => {
       // Dapatkan transit terakhir yang sudah diterima (accepted)
       const acceptedTransits =
-        deliveryDetail!.data.transits?.filter(
-          (transit) => transit.is_accepted
-        ) || [];
+        (deliveryDetail!.data.transits || [])
+          .filter((transit) => transit.is_accepted)
+          .sort((a, b) => a.arrived_at - b.arrived_at);
 
       let currentCityName: string;
 

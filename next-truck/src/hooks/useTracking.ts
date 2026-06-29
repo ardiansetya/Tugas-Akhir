@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import { ApiResponse, TrackingData } from "@/types/api";
+import { ApiResponse, Position } from "@/types/api";
 import { useQuery } from "@tanstack/react-query";
 
 // Get tracking positions by delivery ID
@@ -10,7 +10,7 @@ export const useTrackingPositions = (
   return useQuery({
     queryKey: ["tracking", deliveryId],
     queryFn: async () => {
-      const response = await axiosInstance.get<ApiResponse<TrackingData>>(
+      const response = await axiosInstance.get<ApiResponse<Position[]>>(
         `/api/delivery/positions/${deliveryId}`
       );
       return response.data.data;

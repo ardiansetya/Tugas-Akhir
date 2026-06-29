@@ -27,7 +27,21 @@ export default function Home() {
   const { data: cities } = useCities();
 
   const totalRoutes = routes?.length || 0;
-  const totalTrucksActive = trucks?.filter((t) => t.is_available)?.length || 0;
+  
+  // Get unique truck IDs currently in active deliveries
+  const activeTruckIds = useMemo(() => {
+    return new Set(deliveries?.map((d) => d.truck_id) || []);
+  }, [deliveries]);
+
+  // Available trucks = operational (is_available) and NOT in active delivery
+  const totalTrucksAvailable = useMemo(() => {
+    return trucks?.filter((t) => t.is_available && !activeTruckIds.has(t.id))?.length || 0;
+  }, [trucks, activeTruckIds]);
+
+  const totalTrucksInUse = activeTruckIds.size;
+  const totalTrucks = trucks?.length || 0;
+  const truckUsagePercentage = totalTrucks > 0 ? Math.round((totalTrucksInUse / totalTrucks) * 100) : 0;
+
   const totalDeliveries = deliveries?.length || 0;
   const totalTransitsPending = transits?.filter((t) => t.is_accepted === null && !t.actioned_at)?.length || 0;
 
@@ -231,7 +245,7 @@ export default function Home() {
           delay={0.2}
         >
           <div className="flex items-end justify-between">
-            <div className="text-4xl font-bold">{trucksLoading ? "..." : totalTrucksActive}</div>
+            <div className="text-4xl font-bold">{trucksLoading ? "..." : totalTrucksAvailable}</div>
             <div className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               {trucks?.length || 0} TOTAL
             </div>
@@ -334,12 +348,12 @@ export default function Home() {
                     <path
                       className="stroke-primary fill-none transition-all duration-1000"
                       strokeWidth="3"
-                      strokeDasharray={`${(totalTrucksActive / (trucks?.length || 1)) * 100}, 100`}
+                      strokeDasharray={`${truckUsagePercentage}, 100`}
                       d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-xl font-bold">{Math.round((totalTrucksActive / (trucks?.length || 1)) * 100)}%</span>
+                    <span className="text-xl font-bold">{truckUsagePercentage}%</span>
                   </div>
                </div>
             </div>
@@ -347,10 +361,10 @@ export default function Home() {
             <div className="space-y-2">
                <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground/60">
                  <span>Dipakai</span>
-                 <span>{totalTrucksActive} Unit</span>
+                 <span>{totalTrucksInUse} Unit</span>
                </div>
                <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${(totalTrucksActive / (trucks?.length || 1)) * 100}%` }} />
+                  <div className="h-full bg-primary" style={{ width: `${truckUsagePercentage}%` }} />
                </div>
             </div>
           </div>

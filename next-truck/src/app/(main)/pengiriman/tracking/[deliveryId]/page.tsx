@@ -3,10 +3,11 @@
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Clock, Navigation, RefreshCw, Activity, Database, Globe, Zap, Signal } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Navigation, RefreshCw, Database, Globe, Zap, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTrackingPositions, useDelivery } from "@/hooks";
+import { useTrackingPositions, useDelivery, useTrucks } from "@/hooks";
 import { useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { MotionWrapper } from "@/components/shared/MotionWrapper";
 import { BentoCard } from "@/components/shared/BentoCard";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,22 @@ export default function TrackingPage() {
   } = useTrackingPositions(deliveryId);
 
   const { data: deliveryData } = useDelivery(deliveryId);
+  const { data: trucks } = useTrucks();
+
+  const truckPlate = useMemo(() => {
+    if (!deliveryData || !trucks) return "";
+    const tr = trucks.find((t) => t.id === deliveryData.truck_id);
+    return tr ? tr.license_plate : "";
+  }, [deliveryData, trucks]);
+
+  const deliveryDateStr = useMemo(() => {
+    if (!deliveryData?.started_at) return "";
+    const date = new Date(deliveryData.started_at * 1000);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }, [deliveryData?.started_at]);
 
   const queryCache = queryClient.getQueryCache();
   const query = queryCache.find({ queryKey: ["tracking", deliveryId] });
@@ -75,6 +92,48 @@ export default function TrackingPage() {
     return `${minutes}M YANG LALU`;
   };
 
+  const exportToCSV = () => {
+    if (positions.length === 0) return;
+
+    const headers = ["No", "Nama Lokasi", "Alamat Lengkap", "Kota", "Provinsi", "Negara", "Latitude", "Longitude", "Waktu Rekam"];
+    
+    const rows = positions.map((pos: any, index: number) => {
+      const waktu = new Date(pos.recorded_at * 1000).toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      return [
+        index + 1,
+        `"${(pos.name || "-").replace(/"/g, '""')}"`,
+        `"${(pos.formatted_address || "-").replace(/"/g, '""')}"`,
+        `"${pos.city || "-"}"`,
+        `"${pos.state || "-"}"`,
+        `"${pos.country || "-"}"`,
+        pos.latitude,
+        pos.longitude,
+        `"${waktu}"`,
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    
+    const cleanPlate = truckPlate ? truckPlate.replace(/\s+/g, "-") : "truk";
+    const cleanDate = deliveryDateStr || "tanggal";
+    link.download = `${cleanPlate}_${cleanDate}.csv`;
+
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="container mx-auto p-6 md:p-10 lg:p-12 space-y-10">
       {/* Header Halaman */}
@@ -110,6 +169,16 @@ export default function TrackingPage() {
           <Button
             variant="outline"
             size="lg"
+            onClick={exportToCSV}
+            disabled={positions.length === 0}
+            className="rounded-2xl h-14 px-8 font-bold gap-3 bg-secondary/30 hover:bg-secondary transition-all"
+          >
+            <Download className="h-5 w-5" />
+            Export CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
             onClick={() => refetch()}
             disabled={fetching}
             className="rounded-2xl h-14 px-8 font-bold gap-3 bg-secondary/30 hover:bg-secondary transition-all"
@@ -127,39 +196,24 @@ export default function TrackingPage() {
         <div className="lg:col-span-2 space-y-6">
           <MotionWrapper delay={0.1}>
             <BentoCard 
-              className="p-0 overflow-hidden"
+              className="pb-0 overflow-hidden"
               title="Peta Lokasi" 
               subtitle="Posisi driver saat ini" 
               icon={<Globe className="h-5 w-5" />}
             >
-              <div className="relative">
-                {loading ? (
-                   <Skeleton className="w-full h-[650px] rounded-3xl" />
-                ) : positions.length > 0 ? (
-                   <TrackingMap positions={positions} deliveryData={deliveryData} />
-                ) : (
-                   <div className="w-full h-[650px] flex flex-col items-center justify-center p-12 text-center bg-secondary/5">
-                      <div className="p-6 bg-background rounded-3xl mb-4 border shadow-sm">
-                         <MapPin className="h-14 w-14 opacity-20" />
-                      </div>
-                      <h3 className="text-xl font-bold opacity-40">Koneksi Terputus</h3>
-                      <p className="text-sm font-medium text-muted-foreground/40 mt-1 uppercase tracking-widest">GPS Mati</p>
-                   </div>
-                )}
-                
-                {/* Overlay Status Peta Mengambang */}
-                <div className="absolute top-6 right-6 z-[1000] p-4 bg-background/90 backdrop-blur-xl rounded-2xl border shadow-2xl space-y-4">
-                   <div className="flex items-center gap-3">
-                      <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">GPS Aktif</span>
-                   </div>
-                   <div className="h-[1px] w-full bg-border/50" />
-                   <div className="space-y-1">
-                      <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-50 tracking-widest">Navigasi GPS</p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest">Versi v4.2</p>
-                   </div>
-                </div>
-              </div>
+              {loading ? (
+                 <Skeleton className="w-full h-[650px] rounded-3xl" />
+              ) : positions.length > 0 ? (
+                 <TrackingMap positions={positions} deliveryData={deliveryData} />
+              ) : (
+                 <div className="w-full h-[650px] flex flex-col items-center justify-center p-12 text-center bg-secondary/5">
+                    <div className="p-6 bg-background rounded-3xl mb-4 border shadow-sm">
+                       <MapPin className="h-14 w-14 opacity-20" />
+                    </div>
+                    <h3 className="text-xl font-bold opacity-40">Koneksi Terputus</h3>
+                    <p className="text-sm font-medium text-muted-foreground/40 mt-1 uppercase tracking-widest">GPS Mati</p>
+                 </div>
+              )}
             </BentoCard>
           </MotionWrapper>
         </div>
@@ -221,22 +275,7 @@ export default function TrackingPage() {
             </BentoCard>
           </MotionWrapper>
 
-          <MotionWrapper delay={0.3}>
-             <BentoCard title="Status Sinyal" subtitle="Kekuatan sinyal" icon={<Signal className="h-5 w-5" />}>
-                <div className="mt-4 flex items-center justify-between p-6 bg-green-500/5 border border-green-600/20 rounded-3xl">
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">Koneksi</p>
-                      <p className="text-lg font-bold">Sinyal Bagus</p>
-                   </div>
-                   <div className="flex gap-1 items-end h-8">
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <div className="w-2 h-4 bg-green-500 rounded-full" />
-                      <div className="w-2 h-6 bg-green-500 rounded-full" />
-                      <div className="w-2 h-8 bg-green-500 rounded-full animate-pulse" />
-                   </div>
-                </div>
-             </BentoCard>
-          </MotionWrapper>
+
         </div>
       </div>
 

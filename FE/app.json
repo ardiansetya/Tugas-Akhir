@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "tracking-truck",
-    "slug": "tracking-truck",
+    "slug": "truck-ta",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo.jpg",
@@ -17,7 +17,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.michellee.trackingtruck",
       "infoPlist": {
-        "UIBackgroundModes": ["location"],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Tracking Truck needs your location to track deliveries even when the app is in the background.",
         "NSLocationWhenInUseUsageDescription": "Tracking Truck needs your location to track deliveries.",
         "NSLocationAlwaysUsageDescription": "Tracking Truck needs your location to track deliveries even when the app is closed."
@@ -30,7 +32,9 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.michellee.trackingtruck",
-      "foregroundServiceTypes": ["location"],
+      "foregroundServiceTypes": [
+        "location"
+      ],
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -73,7 +77,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "54b09975-1cef-47e3-80a2-31b2ec99ef82"
+        "projectId": "95d08d1b-5af7-4e0a-b5a9-9c3640341f91"
       }
     },
     "owner": "michellee"
