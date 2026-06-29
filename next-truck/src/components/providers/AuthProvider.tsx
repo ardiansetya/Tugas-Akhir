@@ -11,8 +11,6 @@ const AuthProvider = (props: PropsWithChildren) => {
 
     if (!accessToken || !refreshToken) {
       router.replace("/login");
-    }else{
-      router.replace("/");
     }
   }, []);
 
